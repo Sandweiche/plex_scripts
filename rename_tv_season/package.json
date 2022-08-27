@@ -1,5 +1,5 @@
 {
-  "name": "plex_rename_tv",
+  "name": "plex_rename_tv_season",
   "version": "1.0.0",
   "description": "Renames all files in a season folder to the appropriate structure for a Plex media server. See the README for a more detailed description of use.",
   "main": "index.js",
@@ -9,8 +9,9 @@
   "keywords": [
     "plex",
     "rename",
-    "tv shows",
-    "script"
+    "tv show",
+    "script",
+	 "season"
   ],
   "author": "Sandweiche",
   "license": "ISC"
