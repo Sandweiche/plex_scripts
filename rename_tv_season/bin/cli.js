@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // Imports
 const axios = require('axios');
 const fs = require('fs');
