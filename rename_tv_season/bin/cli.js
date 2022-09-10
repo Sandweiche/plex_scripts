@@ -35,7 +35,7 @@ if (args.length !== 6) {
 		console.error('Invalid command line arg structure. Usage:\n--year/-y 1997\n--name/-n Pokemon\n--directory/-d \"./Season 01\"');
 	}
 
-	const SEASON_EPISODE_EXTENSION_REGEX = /[sS](\d\d)[eE](\d\d)[^.]+(\.[a-z1-9]+)$/g;
+	const SEASON_EPISODE_EXTENSION_REGEX = /[sS](\d\d)[eE](\d\d)[^.]*(\.[a-z1-9]+)$/g;
 	const RESERVED_PATH_CHARS = /[<>\.:"\/\\\|?*]+/g;
 
 	axios.get(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(name)}`)
@@ -66,18 +66,19 @@ if (args.length !== 6) {
 			const files = fs.readdirSync(dir);
 
 			files.forEach(file => {
-				const matches = file.matchAll(SEASON_EPISODE_EXTENSION_REGEX);
+				const matches = [...file.matchAll(SEASON_EPISODE_EXTENSION_REGEX)];
 				for (const match of matches) {
 					const season = match[1];
 					const episode = match[2];
 					const ext = match[3];
 
+
 					axios.get(`https://api.tvmaze.com/shows/${response.data[0].show.id}/episodebynumber?season=${parseInt(season)}&number=${parseInt(episode)}`)
 						.then(response => {
 							response.data.name = response.data.name.replace(RESERVED_PATH_CHARS, '');
 
-							const newName = path.join(__dirname, dir, `${name} (${year})-s${season}e${episode}-${response.data.name}${ext}`);
-							const oldName = path.join(__dirname, dir, file)
+							const newName = path.join(dir, `${name} (${year})-s${season}e${episode}-${response.data.name}${ext}`);
+							const oldName = path.join(dir, file)
 
 							fs.rename(oldName, newName, error => {
 								if (error)
