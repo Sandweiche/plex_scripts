@@ -127,6 +127,7 @@ if (args.length !== 6) {
 					}
 				});
 
+				// Report any errors that shouldn't have stopped the execution
 				console.log()
 				for (const err of errors)
 					console.error(err);
