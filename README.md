@@ -12,6 +12,6 @@ To Use:
 - The script can be run from anywhere with the command `plex_rename_tv_season`
 
 Parameters:
-- --directory/-d: The path to the directory containing *episode* files (usually this is the season folder) (ex. './Cowboy Bebop/Season 01')
+- --directory/-d: The path to the directory containing *episode* files (ex. './Cowboy Bebop/Season 01')
 - --name/-n: The name of the TV show which the season belongs to (ex. 'Cowboy Bebop')
 - --year/-y: The year the first episode of the TV show aired (ex. 1998)
