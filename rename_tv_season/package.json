@@ -16,10 +16,10 @@
   "author": "Sandweiche",
   "license": "ISC",
   "dependencies": {
-	 "axios": "^0.27.2",
+    "axios": "^0.27.2",
     "prompt-sync": "^4.2.0"
   },
   "bin": {
-	"plex_rename_tv_season": "./bin/cli.js"
+    "plex_rename_tv_season": "./bin/cli.js"
   }
 }
