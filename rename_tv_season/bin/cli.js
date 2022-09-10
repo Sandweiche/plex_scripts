@@ -35,7 +35,7 @@ if (args.length !== 6) {
 		console.error('Invalid command line arg structure. Usage:\n--year/-y 1997\n--name/-n Pokemon\n--directory/-d \"./Season 01\"');
 	}
 
-	const SEASON_EPISODE_EXTENSION_REGEX = /[sS](\d\d)[eE](\d\d)[^.]*(\.[a-z1-9]+)$/g;
+	const SEASON_EPISODE_EXTENSION_REGEX = /[sS](\d\d)[eE](\d\d).*(\.[a-z1-9]+)$/g;
 	const RESERVED_PATH_CHARS = /[<>\.:"\/\\\|?*]+/g;
 
 	axios.get(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(name)}`)
@@ -67,6 +67,10 @@ if (args.length !== 6) {
 
 			files.forEach(file => {
 				const matches = [...file.matchAll(SEASON_EPISODE_EXTENSION_REGEX)];
+
+				if (!matches)
+					console.log(`No matches in file: ${file}`)
+
 				for (const match of matches) {
 					const season = match[1];
 					const episode = match[2];
