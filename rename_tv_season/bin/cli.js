@@ -35,14 +35,19 @@ if (args.length !== 6) {
 		console.error('Invalid command line arg structure. Usage:\n--year/-y 1997\n--name/-n Pokemon\n--directory/-d \"./Season 01\"');
 	}
 
-	const SEASON_EPISODE_EXTENSION_REGEX = /[sS](\d\d)[eE](\d\d).*(\.[a-z1-9]+)$/g;
-	const RESERVED_PATH_CHARS = /[<>\.:"\/\\\|?*]+/g;
-
+	// Get a list of matching shows (sorted by relevance) and allow the user to select which one to use. 
+	// If none are chosen the program exits without making changes
 	axios.get(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(name)}`)
 		.then(async response => {
 			const matchedShows = response.data.filter(datum => datum.show.premiered.slice(0, 4) === year)
 
-			console.log(`Summary:\n${matchedShows[0].show.summary}\nOption 1/${matchedShows.length}`);
+			if (matchedShows.length > 0)
+				console.log(`Summary:\n${matchedShows[0].show.summary}\nOption 1/${matchedShows.length}`);
+			else {
+				console.log('No matches found. Terminating process in 5 seconds. Press Ctrl + C to exit early.');
+				await new Promise(resolve => setTimeout(resolve, 5000));
+				process.exit();
+			}
 
 			let foundIt;
 			let idx = 0;
@@ -63,38 +68,68 @@ if (args.length !== 6) {
 				}
 			} while (foundIt.toLowerCase() !== 'y');
 
-			const files = fs.readdirSync(dir);
+			// Read the file names from the directory
+			let files;
+			try {
+				files = fs.readdirSync(dir);
+			} catch (ex) {
+				console.error(ex)
+				console.log('End of options. Terminating process in 5 seconds. Press Ctrl + C to exit early.');
+				await new Promise(resolve => setTimeout(resolve, 5000));
+				process.exit();
+			}
 
+			// Array<{ episode: String, extension: String, oldName: String, uri: String, season: String }>
+			reqInfo = [];
+			// Array<String>
+			errors = [];
+			const SEASON_EPISODE_EXTENSION_REGEX = /[sS](\d\d)[eE](\d\d).*(\.[a-z1-9]+)$/g;
+			const RESERVED_PATH_CHARS = /[<>\.:"\/\\\|?*]+/g;
+
+			// Populate reqInfo array
 			files.forEach(file => {
 				const matches = [...file.matchAll(SEASON_EPISODE_EXTENSION_REGEX)];
 
 				if (!matches)
-					console.log(`No matches in file: ${file}`)
+					errors.push(`No matches in file: ${file}`)
 
 				for (const match of matches) {
-					const season = match[1];
-					const episode = match[2];
-					const ext = match[3];
+					const episode = match[2]
+					const season = match[1]
 
-
-					axios.get(`https://api.tvmaze.com/shows/${response.data[0].show.id}/episodebynumber?season=${parseInt(season)}&number=${parseInt(episode)}`)
-						.then(response => {
-							response.data.name = response.data.name.replace(RESERVED_PATH_CHARS, '');
-
-							const newName = path.join(dir, `${name} (${year})-s${season}e${episode}-${response.data.name}${ext}`);
-							const oldName = path.join(dir, file)
-
-							fs.rename(oldName, newName, error => {
-								if (error)
-									console.error(error);
-								else
-									console.log(`Renamed: ${oldName} -> ${newName}`);
-							});
-						})
-						.catch(error => {
-							console.error(error);
-						});
+					reqInfo.push({
+						episode: episode,
+						extension: match[3],
+						oldName: file,
+						uri: `https://api.tvmaze.com/shows/${response.data[0].show.id}/episodebynumber?season=${parseInt(season)}&number=${parseInt(episode)}`,
+						season: season
+					});
 				}
+			});
+
+			// Get the episode names and then rename the files
+			const requests = [];
+			reqInfo.map(req => req.uri).forEach(uri => {
+				requests.push(axios.get(uri));
+			});
+			Promise.allSettled(requests).then((responses) => {
+				responses.forEach((response, index) => {
+					if (response.status === 'fulfilled') {
+						const showName = response.value.data.name.replace(RESERVED_PATH_CHARS, '');
+
+						const newName = path.join(dir, `${name} (${year})-s${reqInfo[index].season}e${reqInfo[index].episode}-${showName}${reqInfo[index].extension}`);
+						const oldName = path.join(dir, reqInfo[index].oldName);
+
+						fs.renameSync(oldName, newName)
+						console.log(`Renamed: ${oldName} -> ${newName}`);
+					} else {
+						errors.push(`Couldn't rename ${reqInfo[index].oldName} - Reason: ${response.reason.response.data.message}\nPossible Causes:\n- It's a special and isn't necessarily tied to an episode number\n- It's a multi-part episode\n- A million other things\nSee The TVMaze API Documentation here: https://www.tvmaze.com/api#episode-by-number`);
+					}
+				});
+
+				console.log()
+				for (const err of errors)
+					console.error(err);
 			});
 		})
 		.catch(error => {
