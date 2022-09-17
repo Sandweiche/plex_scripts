@@ -17,17 +17,17 @@ if (args.length !== 6) {
 	try {
 		args.forEach((arg, idx) => {
 			switch (arg.toLowerCase()) {
-				case '-y':
-				case '--year':
-					year = args[idx + 1];
+				case '-d':
+				case '--directory':
+					dir = args[idx + 1];
 					break;
 				case '-n':
 				case '--name':
 					name = args[idx + 1];
 					break;
-				case '-d':
-				case '--directory':
-					dir = args[idx + 1];
+				case '-y':
+				case '--year':
+					year = args[idx + 1];
 					break;
 			}
 		});
@@ -96,10 +96,12 @@ if (args.length !== 6) {
 				for (const match of matches) {
 					const episode = match[2]
 					const season = match[1]
+					// Append .en when renaming subtitle files
+					const extension = match[3] === '.srt' ? `.en${match[3]}` : match[3]
 
 					reqInfo.push({
 						episode: episode,
-						extension: match[3],
+						extension: extension,
 						oldName: file,
 						uri: `https://api.tvmaze.com/shows/${response.data[0].show.id}/episodebynumber?season=${parseInt(season)}&number=${parseInt(episode)}`,
 						season: season

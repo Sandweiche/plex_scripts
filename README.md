@@ -15,3 +15,6 @@ Parameters:
 - --directory/-d: The path to the directory containing *episode* files (ex. './Cowboy Bebop/Season 01')
 - --name/-n: The name of the TV show which the season belongs to (ex. 'Cowboy Bebop')
 - --year/-y: The year the first episode of the TV show aired (ex. 1998)
+
+Note:
+- Only .srt file types are supported at the moment
