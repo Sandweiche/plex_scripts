@@ -17,4 +17,4 @@ Parameters:
 - --year/-y: The year the first episode of the TV show aired (ex. 1998)
 
 Note:
-- Only .srt file types are supported at the moment
+- Only .srt file types are supported for subtitles at the moment
